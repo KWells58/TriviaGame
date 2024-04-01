@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "edu.floridapoly.securesoftware.spring24.triviagame"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "edu.floridapoly.securesoftware.spring24.triviagame"
