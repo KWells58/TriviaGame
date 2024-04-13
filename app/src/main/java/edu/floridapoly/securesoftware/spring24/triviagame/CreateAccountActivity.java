@@ -41,6 +41,7 @@ public class CreateAccountActivity extends AppCompatActivity {
                 } else if (!authManager.createAccount(username, password)) {
                     // Account creation failed (username already exists or password not valid)
                     Toast.makeText(CreateAccountActivity.this, "Account creation failed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CreateAccountActivity.this, "Password must have 10 or more digits", Toast.LENGTH_SHORT).show();
                 } else {
                     // Account creation successful
                     Toast.makeText(CreateAccountActivity.this, "Account created successfully", Toast.LENGTH_SHORT).show();
