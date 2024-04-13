@@ -1,5 +1,6 @@
 package edu.floridapoly.securesoftware.spring24.triviagame;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -109,5 +110,35 @@ public class QuizDbHelper extends SQLiteOpenHelper {
         db.close();
         return questionList;
     }
+
+
+    // Fetching questions from the database based on difficulty level
+    @SuppressLint("Range")
+    public List<Question> getQuestionsByDifficulty(String difficulty) {
+        List<Question> questionList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] selectionArgs = {difficulty};
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_QUESTIONS + " WHERE " + COLUMN_DIFFICULTY + " = ?", selectionArgs);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Question question = new Question();
+                question.setId(cursor.getInt(cursor.getColumnIndex(COLUMN_ID)));
+                question.setQuestion(cursor.getString(cursor.getColumnIndex(COLUMN_QUESTION)));
+                question.setOption1(cursor.getString(cursor.getColumnIndex(COLUMN_OPTION1)));
+                question.setOption2(cursor.getString(cursor.getColumnIndex(COLUMN_OPTION2)));
+                question.setOption3(cursor.getString(cursor.getColumnIndex(COLUMN_OPTION3)));
+                question.setOption4(cursor.getString(cursor.getColumnIndex(COLUMN_OPTION4)));
+                question.setAnswerNr(cursor.getInt(cursor.getColumnIndex(COLUMN_ANSWER_NR)));
+                question.setDifficulty(cursor.getString(cursor.getColumnIndex(COLUMN_DIFFICULTY)));
+                questionList.add(question);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+        return questionList;
+    }
+
 
 }

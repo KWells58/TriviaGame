@@ -33,5 +33,7 @@
             android:exported="false"/>
         <activity android:name=".DifficultySelectorActivity"
             android:exported="false"/>
+        <activity android:name=".QuizActivity"
+            android:exported="false"/>
     </application>
 </manifest>
