@@ -18,6 +18,10 @@ public class AuthManager {
         if (sharedPreferences.contains(username)) {
             return false; // Username already exists
         }
+        // Validate password
+        if (!isPasswordValid(password)) {
+            return false; // Password not valid
+        }
         // Save username and hashed password in SharedPreferences
         sharedPreferences.edit().putString(username, password).apply();
         return true;
@@ -28,5 +32,10 @@ public class AuthManager {
         String storedPassword = sharedPreferences.getString(username, null);
         // Compare stored password with the provided password
         return storedPassword != null && storedPassword.equals(password);
+    }
+
+    private boolean isPasswordValid(String password) {
+        // Password must be at least 10 characters long
+        return password.length() >= 10;
     }
 }

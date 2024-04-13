@@ -23,9 +23,17 @@
 
         <activity android:name=".LoginActivity"
             android:exported="false"/>
-        <activity android:name=".HomeActivity"
+        <activity android:name=".CreateAccountActivity"
             android:exported="false"/>
         <activity android:name=".MainActivity"
+            android:exported="false"/>
+        <activity android:name=".HomeActivity"
+            android:exported="false"/>
+        <activity android:name=".AuthManager"
+            android:exported="false"/>
+        <activity android:name=".ProfileActivity"
+            android:exported="false"/>
+        <activity android:name=".DifficultySelectorActivity"
             android:exported="false"/>
     </application>
 </manifest>

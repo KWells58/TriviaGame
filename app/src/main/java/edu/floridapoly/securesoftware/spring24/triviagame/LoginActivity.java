@@ -47,21 +47,15 @@ public class LoginActivity extends AppCompatActivity {
         createAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String username = usernameEditText.getText().toString();
-                String password = passwordEditText.getText().toString();
-                if (authManager.createAccount(username, password)) {
-                    // Account creation successful, navigate to home
-                    navigateToHome();
-                } else {
-                    // Show account creation failed message
-                    Toast.makeText(LoginActivity.this, "Account creation failed", Toast.LENGTH_SHORT).show();
-                }
+                // Open the CreateAccountActivity
+                Intent intent = new Intent(LoginActivity.this, CreateAccountActivity.class);
+                startActivity(intent);
             }
         });
     }
 
     private void navigateToHome() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, HomeActivity.class);
         startActivity(intent);
         finish();
     }
