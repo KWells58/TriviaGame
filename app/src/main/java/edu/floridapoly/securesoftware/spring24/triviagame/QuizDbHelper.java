@@ -14,7 +14,7 @@ import java.util.List;
 public class QuizDbHelper extends SQLiteOpenHelper {
     // Database info
     private static final String DATABASE_NAME = "triviaQuiz.db";
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 8;
 
     // Table and columns names
     private static final String TABLE_QUESTIONS = "questions";
