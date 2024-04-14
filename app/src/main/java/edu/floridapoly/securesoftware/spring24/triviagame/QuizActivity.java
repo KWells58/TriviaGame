@@ -3,6 +3,7 @@ package edu.floridapoly.securesoftware.spring24.triviagame;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,6 +25,8 @@ public class QuizActivity extends AppCompatActivity {
     private Button option3Button;
     private Button option4Button;
 
+    private boolean quizOngoing = true; // Flag to track quiz state
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,17 +41,36 @@ public class QuizActivity extends AppCompatActivity {
         // Query the database for questions based on the selected difficulty level
         QuizDbHelper dbHelper = new QuizDbHelper(this);
 
-        // Create questions
-        Question q1 = new Question("What is the capital of France?", "London", "Berlin", "Paris", "Madrid", 3, "Medium");
-        Question q2 = new Question("What is the largest planet in our solar system?", "Earth", "Mars", "Jupiter", "Saturn", 3, "Medium");
-        Question q3 = new Question("What is the powerhouse of the cell?", "Mitochondria", "Nucleus", "Ribosome", "Golgi apparatus", 1, "Easy");
+        // Check if questions are already loaded into the database
+        boolean questionsAlreadyLoaded = dbHelper.areQuestionsLoaded();
 
-// Add questions to the database
-        dbHelper.addQuestion(q1);
-        dbHelper.addQuestion(q2);
-        dbHelper.addQuestion(q3);
+        // If questions are not already loaded, insert them into the database
+        if (!questionsAlreadyLoaded) {
+            // Create questions
+            Question q1 = new Question("What is the capital of France?", "London", "Berlin", "Paris", "Madrid", 3, "Medium");
+            Question q2 = new Question("What is the largest planet in our solar system?", "Earth", "Mars", "Jupiter", "Saturn", 3, "Medium");
+            Question q3 = new Question("What is the powerhouse of the cell?", "Mitochondria", "Nucleus", "Ribosome", "Golgi apparatus", 1, "Easy");
 
+            // Add questions to the database
+            dbHelper.addQuestion(q1);
+            dbHelper.addQuestion(q2);
+            dbHelper.addQuestion(q3);
+
+            // Mark questions as loaded in the database
+            dbHelper.markQuestionsAsLoaded();
+        }
+
+        // Retrieve questions from the database based on the selected difficulty level
         questionList = dbHelper.getQuestionsByDifficulty(difficulty);
+
+        // Ensure that the question list is not null and contains questions
+        if (questionList == null || questionList.isEmpty()) {
+            // Handle the case where no questions are retrieved from the database
+            // You might want to display an error message or take appropriate action
+            Log.e("QuizActivity", "No questions retrieved from the database");
+            finish(); // Finish the activity
+            return;
+        }
 
         // Initialize UI components
         questionTextView = findViewById(R.id.questionTextView);
@@ -90,41 +112,48 @@ public class QuizActivity extends AppCompatActivity {
         });
     }
 
+
     private void showQuestion() {
-        if (currentQuestionIndex < questionList.size()) {
             Question question = questionList.get(currentQuestionIndex);
             questionTextView.setText(question.getQuestion());
             option1Button.setText(question.getOption1());
             option2Button.setText(question.getOption2());
             option3Button.setText(question.getOption3());
             option4Button.setText(question.getOption4());
-        } else {
-            // No more questions, end the quiz
-            endQuiz();
-        }
     }
 
     private void checkAnswer(int selectedOption) {
-        Question question = questionList.get(currentQuestionIndex);
-        if (selectedOption == question.getAnswerNr()) {
-            // Correct answer
-            score++;
-            Toast.makeText(this, "Correct!", Toast.LENGTH_SHORT).show();
-        } else {
-            // Incorrect answer
-            Toast.makeText(this, "Wrong!", Toast.LENGTH_SHORT).show();
-        }
+        Log.d("QuizActivity", "checkAnswer: currentQuestionIndex = " + currentQuestionIndex);
+        Log.d("QuizActivity", "checkAnswer: questionList size = " + questionList.size());
 
-        // Move to the next question or end the quiz
-        currentQuestionIndex++;
         if (currentQuestionIndex < questionList.size()) {
-            // Display the next question
-            showQuestion();
+            Question question = questionList.get(currentQuestionIndex);
+            if (selectedOption == question.getAnswerNr()) {
+                // Correct answer
+                score++;
+                Toast.makeText(this, "Correct!", Toast.LENGTH_SHORT).show();
+            } else {
+                // Incorrect answer
+                Toast.makeText(this, "Wrong!", Toast.LENGTH_SHORT).show();
+            }
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questionList.size()) {
+                // Display the next question
+                showQuestion();
+            } else {
+                endQuiz();
+            }
         } else {
-            // No more questions, end the quiz
+            // Handle the case where currentQuestionIndex exceeds the questionList size
+            // This could occur if the user taps too quickly or if there's a concurrency issue
+            // You might want to log an error or handle it gracefully
+            // For now, we'll just finish the quiz
+            Log.e("QuizActivity", "checkAnswer: currentQuestionIndex exceeded questionList size");
             endQuiz();
         }
     }
+
 
     private void endQuiz() {
         // Calculate the time taken
@@ -137,14 +166,12 @@ public class QuizActivity extends AppCompatActivity {
         // Display the user's final score and time taken
         Toast.makeText(this, "Quiz ended. Your score: " + score + "\nTime taken: " + timeTaken, Toast.LENGTH_LONG).show();
 
-        // Save the score and time taken in SharedPreferences
-        SharedPreferences sharedPreferences = getSharedPreferences("ScoresPrefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("QuizScore", String.valueOf(score));
-        editor.putString("QuizTimeTaken", timeTaken);
-        editor.apply();
-        // Display the user's final score and time taken
-        Toast.makeText(this, "Quiz ended. Your score: " + score + "\nTime taken: " + timeTaken, Toast.LENGTH_LONG).show();
+        // Store the score and time taken in the database
+        ScoresDbHelper dbHelper = new ScoresDbHelper(this);
+        dbHelper.addQuizResult(score, timeTaken);
+
+        // Finish the activity
         finish();
     }
+
 }

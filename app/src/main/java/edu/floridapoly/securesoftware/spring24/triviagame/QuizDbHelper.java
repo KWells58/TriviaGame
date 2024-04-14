@@ -14,7 +14,7 @@ import java.util.List;
 public class QuizDbHelper extends SQLiteOpenHelper {
     // Database info
     private static final String DATABASE_NAME = "triviaQuiz.db";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 6;
 
     // Table and columns names
     private static final String TABLE_QUESTIONS = "questions";
@@ -26,6 +26,10 @@ public class QuizDbHelper extends SQLiteOpenHelper {
     private static final String COLUMN_OPTION4 = "option4";
     private static final String COLUMN_ANSWER_NR = "answer_nr";
     private static final String COLUMN_DIFFICULTY = "difficulty";  // difficulty level
+    private static final String COLUMN_LOADED = "loaded";
+
+
+
 
     public QuizDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -41,7 +45,8 @@ public class QuizDbHelper extends SQLiteOpenHelper {
                 COLUMN_OPTION3 + " TEXT, " +
                 COLUMN_OPTION4 + " TEXT, " +
                 COLUMN_ANSWER_NR + " INTEGER, " +
-                COLUMN_DIFFICULTY + " TEXT" +
+                COLUMN_DIFFICULTY + " TEXT, " +
+                COLUMN_LOADED + " INTEGER DEFAULT 0" + // Default value is 0 (not loaded)
                 ");";
         db.execSQL(createTableStatement);
     }
@@ -138,6 +143,26 @@ public class QuizDbHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         return questionList;
+    }
+
+    public boolean areQuestionsLoaded() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] selectionArgs = {"1"}; // Look for questions marked as loaded
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_QUESTIONS +
+                " WHERE " + COLUMN_LOADED + " = ?", selectionArgs);
+        boolean loaded = cursor.getCount() > 0;
+        cursor.close();
+        db.close();
+        return loaded;
+    }
+
+
+    public void markQuestionsAsLoaded() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(COLUMN_LOADED, 1); // Mark questions as loaded
+        db.update(TABLE_QUESTIONS, cv, null, null);
+        db.close();
     }
 
 
