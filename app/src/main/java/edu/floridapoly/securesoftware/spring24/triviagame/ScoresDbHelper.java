@@ -11,11 +11,13 @@ import java.util.List;
 
 public class ScoresDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "quiz_results.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 6;
     private static final String TABLE_RESULTS = "quiz_results";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_SCORE = "score";
     private static final String COLUMN_TIME_TAKEN = "time_taken";
+    private static final String COLUMN_DIFFICULTY = "difficulty";
+
 
     public ScoresDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -26,7 +28,8 @@ public class ScoresDbHelper extends SQLiteOpenHelper {
         String createTableStatement = "CREATE TABLE " + TABLE_RESULTS + " (" +
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_SCORE + " INTEGER, " +
-                COLUMN_TIME_TAKEN + " TEXT)";
+                COLUMN_TIME_TAKEN + " TEXT, " +
+                COLUMN_DIFFICULTY + " TEXT)";
         db.execSQL(createTableStatement);
     }
 
@@ -36,11 +39,12 @@ public class ScoresDbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void addQuizResult(int score, String timeTaken) {
+    public void addQuizResult(int score, String timeTaken, String difficulty) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put(COLUMN_SCORE, score);
         cv.put(COLUMN_TIME_TAKEN, timeTaken);
+        cv.put(COLUMN_DIFFICULTY, difficulty); // Store difficulty level
         db.insert(TABLE_RESULTS, null, cv);
         db.close();
     }
@@ -55,7 +59,8 @@ public class ScoresDbHelper extends SQLiteOpenHelper {
             do {
                 int score = cursor.getInt(cursor.getColumnIndex(COLUMN_SCORE));
                 String timeTaken = cursor.getString(cursor.getColumnIndex(COLUMN_TIME_TAKEN));
-                String result = "Score: " + score + ", Time Taken: " + timeTaken;
+                String difficulty = cursor.getString(cursor.getColumnIndex(COLUMN_DIFFICULTY));
+                String result = "Difficulty: " + difficulty + " Score: " + score + ", Time Taken: " + timeTaken;
                 quizResults.add(result);
             } while (cursor.moveToNext());
         }

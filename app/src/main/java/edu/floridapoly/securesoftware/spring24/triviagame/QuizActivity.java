@@ -18,12 +18,14 @@ public class QuizActivity extends AppCompatActivity {
     private int currentQuestionIndex = 0;
     private int score = 0;
     private long startTime;
+    private String difficulty;
 
     private TextView questionTextView;
     private Button option1Button;
     private Button option2Button;
     private Button option3Button;
     private Button option4Button;
+
 
     private boolean quizOngoing = true; // Flag to track quiz state
 
@@ -36,7 +38,7 @@ public class QuizActivity extends AppCompatActivity {
         startTime = SystemClock.elapsedRealtime();
 
         // Receive the selected difficulty level
-        String difficulty = getIntent().getStringExtra("difficulty");
+        difficulty = getIntent().getStringExtra("difficulty");
 
         // Query the database for questions based on the selected difficulty level
         QuizDbHelper dbHelper = new QuizDbHelper(this);
@@ -163,13 +165,13 @@ public class QuizActivity extends AppCompatActivity {
         seconds %= 60;
         String timeTaken = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
 
+
         // Display the user's final score and time taken
         Toast.makeText(this, "Quiz ended. Your score: " + score + "\nTime taken: " + timeTaken, Toast.LENGTH_LONG).show();
 
         // Store the score and time taken in the database
         ScoresDbHelper dbHelper = new ScoresDbHelper(this);
-        dbHelper.addQuizResult(score, timeTaken);
-
+        dbHelper.addQuizResult(score, timeTaken, difficulty);
         // Finish the activity
         finish();
     }

@@ -1,13 +1,11 @@
 package edu.floridapoly.securesoftware.spring24.triviagame;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import androidx.appcompat.app.AppCompatActivity;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
 
 public class ScoresActivity extends AppCompatActivity {
     private ListView scoresListView;
