@@ -35,5 +35,9 @@
             android:exported="false"/>
         <activity android:name=".QuizActivity"
             android:exported="false"/>
+        <activity android:name=".ChangePasswordActivity"
+            android:exported="false"/>
+        <activity android:name=".ScoresActivity"
+            android:exported="false"/>
     </application>
 </manifest>

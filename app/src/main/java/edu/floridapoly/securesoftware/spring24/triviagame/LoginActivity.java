@@ -1,6 +1,8 @@
 package edu.floridapoly.securesoftware.spring24.triviagame;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -15,6 +17,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText passwordEditText;
     private Button loginButton;
     private Button createAccountButton;
+    private Button changePasswordButton;
     private AuthManager authManager;
 
     @Override
@@ -28,6 +31,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.passwordEditText);
         loginButton = findViewById(R.id.loginButton);
         createAccountButton = findViewById(R.id.createAccountButton);
+        changePasswordButton = findViewById(R.id.changePasswordButton);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -36,6 +40,13 @@ public class LoginActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString();
                 if (authManager.login(username, password)) {
                     // Login successful, navigate to home
+                    // Save username in SharedPreferences after successful login
+                    SharedPreferences preferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("username", username);
+                    editor.putString("password", password);
+                    editor.apply();
+
                     navigateToHome();
                 } else {
                     // Show login failed message
@@ -49,6 +60,15 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Open the CreateAccountActivity
                 Intent intent = new Intent(LoginActivity.this, CreateAccountActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        changePasswordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Open the CreateAccountActivity
+                Intent intent = new Intent(LoginActivity.this, ChangePasswordActivity.class);
                 startActivity(intent);
             }
         });

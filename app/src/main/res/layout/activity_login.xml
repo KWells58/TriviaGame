@@ -41,4 +41,13 @@
         android:layout_marginTop="16dp"
         android:text="Create Account"/>
 
+    <Button
+        android:id="@+id/changePasswordButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/createAccountButton"
+        android:layout_marginTop="16dp"
+        android:layout_centerInParent="true"
+        android:text="Change Password" />
+
 </RelativeLayout>

@@ -1,5 +1,6 @@
 package edu.floridapoly.securesoftware.spring24.triviagame;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.View;
@@ -129,6 +130,12 @@ public class QuizActivity extends AppCompatActivity {
 
         // Display the user's final score and time taken
         Toast.makeText(this, "Quiz ended. Your score: " + score + "\nTime taken: " + timeTaken, Toast.LENGTH_LONG).show();
+
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("scores", "Score: " + score + "\nTime taken: " + timeTaken);
+        editor.apply();
+
         finish();
     }
 }
