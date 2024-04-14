@@ -68,7 +68,6 @@ public class QuizActivity extends AppCompatActivity {
         // Ensure that the question list is not null and contains questions
         if (questionList == null || questionList.isEmpty()) {
             // Handle the case where no questions are retrieved from the database
-            // You might want to display an error message or take appropriate action
             Log.e("QuizActivity", "No questions retrieved from the database");
             finish(); // Finish the activity
             return;
@@ -147,10 +146,6 @@ public class QuizActivity extends AppCompatActivity {
                 endQuiz();
             }
         } else {
-            // Handle the case where currentQuestionIndex exceeds the questionList size
-            // This could occur if the user taps too quickly or if there's a concurrency issue
-            // You might want to log an error or handle it gracefully
-            // For now, we'll just finish the quiz
             Log.e("QuizActivity", "checkAnswer: currentQuestionIndex exceeded questionList size");
             endQuiz();
         }
