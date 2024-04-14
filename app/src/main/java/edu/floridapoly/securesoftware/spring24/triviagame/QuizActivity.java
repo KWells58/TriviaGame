@@ -115,9 +115,15 @@ public class QuizActivity extends AppCompatActivity {
             Toast.makeText(this, "Wrong!", Toast.LENGTH_SHORT).show();
         }
 
-        // Move to the next question
+        // Move to the next question or end the quiz
         currentQuestionIndex++;
-        showQuestion();
+        if (currentQuestionIndex < questionList.size()) {
+            // Display the next question
+            showQuestion();
+        } else {
+            // No more questions, end the quiz
+            endQuiz();
+        }
     }
 
     private void endQuiz() {
@@ -131,11 +137,14 @@ public class QuizActivity extends AppCompatActivity {
         // Display the user's final score and time taken
         Toast.makeText(this, "Quiz ended. Your score: " + score + "\nTime taken: " + timeTaken, Toast.LENGTH_LONG).show();
 
-        SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        // Save the score and time taken in SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences("ScoresPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("scores", "Score: " + score + "\nTime taken: " + timeTaken);
+        editor.putString("QuizScore", String.valueOf(score));
+        editor.putString("QuizTimeTaken", timeTaken);
         editor.apply();
-
+        // Display the user's final score and time taken
+        Toast.makeText(this, "Quiz ended. Your score: " + score + "\nTime taken: " + timeTaken, Toast.LENGTH_LONG).show();
         finish();
     }
 }
