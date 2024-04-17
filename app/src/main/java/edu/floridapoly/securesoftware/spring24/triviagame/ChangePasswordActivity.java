@@ -25,6 +25,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("ChangePasswordActivity", "Logged-in username: " + getLoggedInUsername());
         setContentView(R.layout.activity_change_password);
 
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
@@ -80,7 +81,6 @@ public class ChangePasswordActivity extends AppCompatActivity {
             Toast.makeText(this, "Failed to change password", Toast.LENGTH_SHORT).show();
         }
     }
-
     private String getLoggedInUsername() {
         SharedPreferences preferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         return preferences.getString("username", "");

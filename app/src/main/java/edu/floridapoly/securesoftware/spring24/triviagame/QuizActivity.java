@@ -1,5 +1,6 @@
 package edu.floridapoly.securesoftware.spring24.triviagame;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -294,7 +295,10 @@ public class QuizActivity extends AppCompatActivity {
             endQuiz();
         }
     }
-
+    private String getLoggedInUsername() {
+        SharedPreferences preferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        return preferences.getString("username", "");
+    }
 
     private void endQuiz() {
         // Calculate the time taken
@@ -302,6 +306,7 @@ public class QuizActivity extends AppCompatActivity {
         int seconds = (int) (elapsedTime / 1000);
         int minutes = seconds / 60;
         seconds %= 60;
+        String username = getLoggedInUsername();
         String timeTaken = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
 
 
@@ -310,7 +315,7 @@ public class QuizActivity extends AppCompatActivity {
 
         // Store the score and time taken in the database
         ScoresDbHelper dbHelper = new ScoresDbHelper(this);
-        dbHelper.addQuizResult(score, timeTaken, difficulty);
+        dbHelper.addQuizResult(username, score, timeTaken, difficulty);
         // Finish the activity
         finish();
     }

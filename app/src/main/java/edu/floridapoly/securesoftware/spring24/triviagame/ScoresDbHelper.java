@@ -11,9 +11,10 @@ import java.util.List;
 
 public class ScoresDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "quiz_results.db";
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 7;
     private static final String TABLE_RESULTS = "quiz_results";
     private static final String COLUMN_ID = "id";
+    private static final String COLUMN_USERNAME = "username";
     private static final String COLUMN_SCORE = "score";
     private static final String COLUMN_TIME_TAKEN = "time_taken";
     private static final String COLUMN_DIFFICULTY = "difficulty";
@@ -27,6 +28,7 @@ public class ScoresDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String createTableStatement = "CREATE TABLE " + TABLE_RESULTS + " (" +
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                COLUMN_USERNAME +  " TEXT, " +
                 COLUMN_SCORE + " INTEGER, " +
                 COLUMN_TIME_TAKEN + " TEXT, " +
                 COLUMN_DIFFICULTY + " TEXT)";
@@ -39,9 +41,10 @@ public class ScoresDbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void addQuizResult(int score, String timeTaken, String difficulty) {
+    public void addQuizResult(String username, int score, String timeTaken, String difficulty) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
+        cv.put(COLUMN_USERNAME, username);
         cv.put(COLUMN_SCORE, score);
         cv.put(COLUMN_TIME_TAKEN, timeTaken);
         cv.put(COLUMN_DIFFICULTY, difficulty); // Store difficulty level
@@ -50,10 +53,10 @@ public class ScoresDbHelper extends SQLiteOpenHelper {
     }
 
     @SuppressLint("Range")
-    public List<String> getAllQuizResults() {
+    public List<String> getAllQuizResults(String username) {
         List<String> quizResults = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_RESULTS, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_RESULTS + " WHERE " + COLUMN_USERNAME + " = ?", new String[]{username});
 
         if (cursor.moveToFirst()) {
             do {
