@@ -2,7 +2,15 @@ package edu.floridapoly.securesoftware.spring24.triviagame;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Base64;
 import android.util.Log;
+
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKeys;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class AuthManager {
 
@@ -10,72 +18,70 @@ public class AuthManager {
     private SharedPreferences sharedPreferences;
 
     private static final String USER_PREFS = "UserPrefs";
-    private static final String USERNAME_KEY = "username";
-    private static final String PASSWORD_KEY = "password";
 
     public AuthManager(Context context) {
-
         this.context = context;
+        initializeSharedPreferences();
+    }
+
+    private void initializeSharedPreferences() {
+        try {
+            String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+            sharedPreferences = EncryptedSharedPreferences.create(
+                    USER_PREFS,
+                    masterKeyAlias,
+                    context,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (Exception e) {
+            Log.e("AuthManager", "Failed to initialize EncryptedSharedPreferences", e);
+            throw new RuntimeException("Could not initialize EncryptedSharedPreferences", e);
+        }
     }
 
     public boolean createAccount(String username, String password) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-        // Check if username already exists
         if (sharedPreferences.contains(username)) {
             return false; // Username already exists
         }
-        // Validate password
         if (!isPasswordValid(password)) {
             return false; // Password not valid
         }
-        // Save username and hashed password in SharedPreferences
-        sharedPreferences.edit().putString(username, password).apply();
+        String hashedPassword = hashPassword(password);
+        sharedPreferences.edit().putString(username, hashedPassword).apply();
         return true;
     }
 
     public boolean login(String username, String password) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-        // Retrieve stored password for the given username
-        String storedPassword = sharedPreferences.getString(username, null);
-        // Compare stored password with the provided password
-        return (storedPassword != null && storedPassword.equals(password));
+        String storedHashedPassword = sharedPreferences.getString(username, null);
+        String hashedPassword = hashPassword(password);
+        return (storedHashedPassword != null && storedHashedPassword.equals(hashedPassword));
     }
-
 
     private boolean isPasswordValid(String password) {
-        // Password must be at least 10 characters long
-        return password.length() >= 10;
+        return password.length() >= 10; // Add more complexity checks as necessary
     }
-
 
     public boolean changePassword(String username, String currentPassword, String newPassword) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        // Check if current password is correct
-        String storedPasswordBeforeChange = sharedPreferences.getString(username, null);
-        Log.d("ChangePassword", "Stored password before change: " + storedPasswordBeforeChange);
-
-        if (storedPasswordBeforeChange == null || !storedPasswordBeforeChange.equals(currentPassword)) {
-            Log.d("ChangePassword", "Current password incorrect");
+        String storedHashedPassword = sharedPreferences.getString(username, null);
+        if (storedHashedPassword == null || !storedHashedPassword.equals(hashPassword(currentPassword))) {
             return false; // Current password incorrect
         }
-
-        // Validate new password
         if (!isPasswordValid(newPassword)) {
-            Log.d("ChangePassword", "New password not valid");
             return false; // New password not valid
         }
-
-        // Save the new password
-        editor.putString(username, newPassword);
-        editor.apply();
-
-        // Check the stored password after the change
-        String storedPasswordAfterChange = sharedPreferences.getString(username, null);
-        Log.d("ChangePassword", "Stored password after change: " + storedPasswordAfterChange);
-
+        sharedPreferences.edit().putString(username, hashPassword(newPassword)).apply();
         return true;
     }
-}
 
+    private String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedhash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            return Base64.encodeToString(encodedhash, Base64.DEFAULT);
+        } catch (NoSuchAlgorithmException e) {
+            Log.e("AuthManager", "Failed to hash password", e);
+            return null;
+        }
+    }
+}
