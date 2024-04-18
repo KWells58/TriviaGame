@@ -3,6 +3,7 @@ package edu.floridapoly.securesoftware.spring24.triviagame;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -22,11 +23,13 @@ public class QuizActivity extends AppCompatActivity {
     private long startTime;
     private String difficulty;
 
-    private TextView questionTextView;
+    private TextView questionTextView, scoreTextView, timerTextView;
     private Button option1Button;
     private Button option2Button;
     private Button option3Button;
     private Button option4Button;
+    private Handler timerHandler = new Handler();
+    private Runnable timerRunnable;
 
     private boolean quizOngoing = true; // Flag to track quiz state
 
@@ -224,6 +227,10 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void setupUI() {
+        timerTextView = findViewById(R.id.timerTextView);
+        scoreTextView = findViewById(R.id.scoreTextView);
+        updateTimerAndScoreViews();
+
         questionTextView = findViewById(R.id.questionTextView);
         option1Button = findViewById(R.id.option1Button);
         option2Button = findViewById(R.id.option2Button);
@@ -256,6 +263,7 @@ public class QuizActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Wrong!", Toast.LENGTH_SHORT).show();
             }
+            scoreTextView.setText("Score: " + score);  // Update the score display
             currentQuestionIndex++;
             if (currentQuestionIndex < questionList.size()) {
                 showQuestion();
@@ -268,17 +276,37 @@ public class QuizActivity extends AppCompatActivity {
         }
     }
 
+    private void updateTimerAndScoreViews() {
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (quizOngoing) {
+                    long elapsedMillis = SystemClock.elapsedRealtime() - startTime;
+                    int minutes = (int) (elapsedMillis / 1000 / 60);
+                    int seconds = (int) (elapsedMillis / 1000 % 60);
+                    timerTextView.setText(String.format(Locale.getDefault(), "Time: %02d:%02d", minutes, seconds));
+                    timerHandler.postDelayed(this, 1000);
+                }
+            }
+        };
+        timerHandler.postDelayed(timerRunnable, 1000);
+        scoreTextView.setText("Score: " + score);
+    }
+
+
     private void endQuiz() {
+        quizOngoing = false;  // Set the flag to stop the timer
+        timerHandler.removeCallbacks(timerRunnable);  // Stop the timer
         long elapsedTime = SystemClock.elapsedRealtime() - startTime;
         int minutes = (int) (elapsedTime / 1000 / 60);
         int seconds = (int) (elapsedTime / 1000 % 60);
         String timeTaken = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
         String username = getLoggedInUsername();
-
         Toast.makeText(this, "Quiz ended. Your score: " + score + "\nTime taken: " + timeTaken, Toast.LENGTH_LONG).show();
         storeResultInDatabase(username, score, timeTaken, difficulty);
         finish();
     }
+
 
     private String getLoggedInUsername() {
         SharedPreferences preferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);

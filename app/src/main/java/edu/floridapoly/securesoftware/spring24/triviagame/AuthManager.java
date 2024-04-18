@@ -59,7 +59,7 @@ public class AuthManager {
     }
 
     private boolean isPasswordValid(String password) {
-        return password.length() >= 10; // Add more complexity checks as necessary
+        return password.length() >= 10;
     }
 
     public boolean changePassword(String username, String currentPassword, String newPassword) {
