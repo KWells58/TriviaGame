@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -27,7 +28,6 @@ public class QuizActivity extends AppCompatActivity {
     private Button option3Button;
     private Button option4Button;
 
-
     private boolean quizOngoing = true; // Flag to track quiz state
 
     @Override
@@ -41,12 +41,18 @@ public class QuizActivity extends AppCompatActivity {
         // Receive the selected difficulty level
         difficulty = getIntent().getStringExtra("difficulty");
 
-        // Query the database for questions based on the selected difficulty level
+        // Initialize the database helper and question settings
+        initializeDatabaseAndQuestions();
+
+        // Setup the UI components and interactions
+        setupUI();
+    }
+
+    private void initializeDatabaseAndQuestions() {
         QuizDbHelper dbHelper = new QuizDbHelper(this);
 
         // Check if questions are already loaded into the database
         boolean questionsAlreadyLoaded = dbHelper.areQuestionsLoaded();
-
         // If questions are not already loaded, insert them into the database
         if (!questionsAlreadyLoaded) {
             // Create questions
@@ -206,118 +212,81 @@ public class QuizActivity extends AppCompatActivity {
             // Mark questions as loaded in the database
             dbHelper.markQuestionsAsLoaded();
         }
+        questionList = dbHelper.getQuestionsByDifficulty(difficulty, 10);
 
-        // Retrieve questions from the database based on the selected difficulty level
-        questionList = dbHelper.getQuestionsByDifficulty(difficulty);
-
-        // Ensure that the question list is not null and contains questions
         if (questionList == null || questionList.isEmpty()) {
-            // Handle the case where no questions are retrieved from the database
-            Log.e("QuizActivity", "No questions retrieved from the database");
-            finish(); // Finish the activity
-            return;
+            Log.e("QuizActivity", "No questions retrieved from the database.");
+            finish(); // Close activity if no questions were retrieved
         }
 
-        // Initialize UI components
+        // Shuffle the questions to ensure even further randomness
+        Collections.shuffle(questionList);
+    }
+
+    private void setupUI() {
         questionTextView = findViewById(R.id.questionTextView);
         option1Button = findViewById(R.id.option1Button);
         option2Button = findViewById(R.id.option2Button);
         option3Button = findViewById(R.id.option3Button);
         option4Button = findViewById(R.id.option4Button);
 
-        // Display the first question
+        option1Button.setOnClickListener(v -> checkAnswer(1));
+        option2Button.setOnClickListener(v -> checkAnswer(2));
+        option3Button.setOnClickListener(v -> checkAnswer(3));
+        option4Button.setOnClickListener(v -> checkAnswer(4));
+
         showQuestion();
-
-        // Set click listeners for answer buttons
-        option1Button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkAnswer(1);
-            }
-        });
-
-        option2Button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkAnswer(2);
-            }
-        });
-
-        option3Button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkAnswer(3);
-            }
-        });
-
-        option4Button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkAnswer(4);
-            }
-        });
     }
 
-
     private void showQuestion() {
-            Question question = questionList.get(currentQuestionIndex);
-            questionTextView.setText(question.getQuestion());
-            option1Button.setText(question.getOption1());
-            option2Button.setText(question.getOption2());
-            option3Button.setText(question.getOption3());
-            option4Button.setText(question.getOption4());
+        Question question = questionList.get(currentQuestionIndex);
+        questionTextView.setText(question.getQuestion());
+        option1Button.setText(question.getOption1());
+        option2Button.setText(question.getOption2());
+        option3Button.setText(question.getOption3());
+        option4Button.setText(question.getOption4());
     }
 
     private void checkAnswer(int selectedOption) {
-        Log.d("QuizActivity", "checkAnswer: currentQuestionIndex = " + currentQuestionIndex);
-        Log.d("QuizActivity", "checkAnswer: questionList size = " + questionList.size());
-
         if (currentQuestionIndex < questionList.size()) {
-            Question question = questionList.get(currentQuestionIndex);
-            if (selectedOption == question.getAnswerNr()) {
-                // Correct answer
+            Question currentQuestion = questionList.get(currentQuestionIndex);
+            if (selectedOption == currentQuestion.getAnswerNr()) {
                 score++;
                 Toast.makeText(this, "Correct!", Toast.LENGTH_SHORT).show();
             } else {
-                // Incorrect answer
                 Toast.makeText(this, "Wrong!", Toast.LENGTH_SHORT).show();
             }
             currentQuestionIndex++;
-
             if (currentQuestionIndex < questionList.size()) {
-                // Display the next question
                 showQuestion();
             } else {
                 endQuiz();
             }
         } else {
-            Log.e("QuizActivity", "checkAnswer: currentQuestionIndex exceeded questionList size");
+            Log.e("QuizActivity", "Index out of bounds: Attempt to access unavailable question.");
             endQuiz();
         }
     }
-    private String getLoggedInUsername() {
-        SharedPreferences preferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-        return preferences.getString("username", "");
-    }
 
     private void endQuiz() {
-        // Calculate the time taken
         long elapsedTime = SystemClock.elapsedRealtime() - startTime;
-        int seconds = (int) (elapsedTime / 1000);
-        int minutes = seconds / 60;
-        seconds %= 60;
-        String username = getLoggedInUsername();
+        int minutes = (int) (elapsedTime / 1000 / 60);
+        int seconds = (int) (elapsedTime / 1000 % 60);
         String timeTaken = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+        String username = getLoggedInUsername();
 
-
-        // Display the user's final score and time taken
         Toast.makeText(this, "Quiz ended. Your score: " + score + "\nTime taken: " + timeTaken, Toast.LENGTH_LONG).show();
-
-        // Store the score and time taken in the database
-        ScoresDbHelper dbHelper = new ScoresDbHelper(this);
-        dbHelper.addQuizResult(username, score, timeTaken, difficulty);
-        // Finish the activity
+        storeResultInDatabase(username, score, timeTaken, difficulty);
         finish();
     }
 
+    private String getLoggedInUsername() {
+        SharedPreferences preferences = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        return preferences.getString("username", "Guest");
+    }
+
+    private void storeResultInDatabase(String username, int score, String timeTaken, String difficulty) {
+        ScoresDbHelper scoresDbHelper = new ScoresDbHelper(this);
+        scoresDbHelper.addQuizResult(username, score, timeTaken, difficulty);
+    }
 }

@@ -7,6 +7,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import java.util.Collections;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -119,11 +121,10 @@ public class QuizDbHelper extends SQLiteOpenHelper {
 
     // Fetching questions from the database based on difficulty level
     @SuppressLint("Range")
-    public List<Question> getQuestionsByDifficulty(String difficulty) {
+    public List<Question> getQuestionsByDifficulty(String difficulty, int numQuestions) {
         List<Question> questionList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] selectionArgs = {difficulty};
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_QUESTIONS + " WHERE " + COLUMN_DIFFICULTY + " = ?", selectionArgs);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_QUESTIONS + " WHERE " + COLUMN_DIFFICULTY + " = ? ORDER BY RANDOM() LIMIT ?", new String[]{difficulty, String.valueOf(numQuestions)});
 
         if (cursor.moveToFirst()) {
             do {
